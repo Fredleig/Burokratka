@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self';">
+  <title>Бюракратка</title>
+</head>
+<style>
+    body {
+       position: relative;
+    }
+    .form-example {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .wake-up {
+        margin-top: 5px;
+        border-bottom: 1px solid lightsteelblue;
+        border-top: 1px solid lightsteelblue;
+        padding: 5px 0;
+    }
+
+    .wake-up h4 {
+        margin: 0;
+    }
+
+    .log {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        height: 300px;
+        overflow: auto;
+        margin-top: 10px;
+    }
+
+    .log .success {
+        color: green;
+    }
+
+    .log .error {
+        color: red;
+    }
+
+    button#clear, button#start {
+        margin-top: 5px;
+    }
+
+    .version {
+        position: absolute;
+        bottom: 0;
+    }
+</style>
+<body>
+<form class="form-example">
+  <fieldset>
+    <fieldset>
+      <div>
+        <label for="email">Мыло: </label>
+        <input type="email" name="email" id="email" placeholder="FilinAI@sibintek.ru" required/>
+      </div>
+      <div>
+        <label for="password">Пароль: </label>
+        <input type="password" name="password" id="password" required/>
+      </div>
+      <div>
+        <label for="startDay">Начало дня: </label>
+        <input value="09:00" type="time" name="startDay" id="startDay" required/>
+      </div>
+      <div>
+        <label for="startDay">Конец дня: </label>
+        <input value="18:00" type="time" name="endDay" id="endDay" required/>
+      </div>
+      <div>
+        <label for="to">Кому: </label>
+        <input value="NikoloVA@sibintek.ru" type="email" name="to" id="to" required/>
+      </div>
+      <div>
+        <label for="copyTo">Копия: </label>
+        <input value="EninVV@sibintek.ru" type="email" name="copyTo" id="copyTo"/>
+      </div>
+      <div>
+        <label for="start_body">Тело письма (НД): </label>
+        <div><textarea name="start_body" id="start_body"></textarea></div>
+      </div>
+      <div>
+        <label for="end_body">Тело письма (КД): </label>
+        <div><textarea name="end_body" id="end_body"></textarea></div>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>ВПН</legend>
+      <div>
+        <label for="vpnUser">username: </label>
+        <input name="vpnUser" id="vpnUser" required/>
+      </div>
+      <div>
+        <label for="vpnPassword">password: </label>
+        <input type="password" name="vpnPassword" id="vpnPassword" required/>
+      </div>
+    </fieldset>
+    <div>
+      <button id="start" type="submit">Запустить</button>
+      <button id="stop" type="button">Остановить</button>
+    </div>
+  </fieldset>
+</form>
+<button id="clear">Очистить запомненные настройки</button>
+<div class="wake-up">
+  <h4>Выход из сна</h4>
+  Для этого программа должна быть открыта через админа и включены таймеры пробуждения в настройках электропитания
+  windows
+  <button id="createTask">Создать задачу</button>
+  <button id="deleteTask">Удалить задачу</button>
+</div>
+<div class="notification-log"></div>
+<div class="log"></div>
+<div class="version">
+</div>
+<script src="./renderer.js"></script>
+</body>
+</html>
