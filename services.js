@@ -342,7 +342,7 @@ class Messager {
     emailMessage.Body = messageBody;
 
     return emailMessage
-      .Send()
+      .SendAndSaveCopy()
       .then(() => {
         this.win.webContents.send("info_log", {
           text: `${dayjs().format("DD.MMMM.YYYY HH:mm")} [${title}] - Успех`,
