@@ -3,7 +3,7 @@
   "author": "Filin",
   "description": "Отправка дня",
   "main": "main.js",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "scripts": {
     "start": "electron-forge start",
     "electron": "APP_DEV=true electron .",
