@@ -6,7 +6,7 @@ const fs = require('fs');
 const {getPublicPath} = require("./utils");
 const {WebContentsView} = require("electron");
 const path = require("path");
-const EventEmitter = require('node:events')
+const EventEmitter = require('node:events');
 
 const execAsync = (cmd, options) => new Promise((resolve, reject) => {
   exec('@chcp 65001 >nul & ' + cmd, {...options, encoding: 'utf8'}, (error, stdout, stderr) => {
@@ -233,32 +233,60 @@ class Messager {
     const currentDate = dayjs();
     const currentDay = dayjs().day();
 
+    const isAfterCurrentDate = (targetDate) => {
+      return currentDate.isAfter(targetDate, 'millisecond') || currentDate.isSame(targetDate, 'millisecond');
+    }
+    const setTtm = () => {
+      this.#addLog(`Запланирована отправка ${targetDate.format('DD.MM.YY HH:mm')}`, isEnd);
+      return setTimeout(fn, targetDate.diff(currentDate, 'millisecond'));
+    }
+
+    // суббота
     if (currentDay === 6) {
       targetDate = targetDate.add(2, 'day');
-
-      this.#addLog(`Запланирована отправка ${targetDate.format('DD.MM.YY HH:mm')}`, isEnd);
-      return setTimeout(fn, targetDate.diff(currentDate, 'millisecond'));
+      return setTtm();
     }
 
+    // воскресенье
     if (currentDay === 0) {
       targetDate = targetDate.add(1, 'day');
-
-      this.#addLog(`Запланирована отправка ${targetDate.format('DD.MM.YY HH:mm')}`, isEnd);
-      return setTimeout(fn, targetDate.diff(currentDate, 'millisecond'));
+      return setTtm();
     }
 
-    if (currentDate.isAfter(targetDate)) {
-      targetDate = targetDate.add(currentDay === 5 ? 3 : 1, 'day');
-      if (isEnd && currentDay === 4) targetDate = targetDate.subtract(75, 'minute'); // сокращённыйц день пятница
-
-      this.#addLog(`Запланирована отправка ${targetDate.format('DD.MM.YY HH:mm')}`, isEnd);
-      return setTimeout(fn, targetDate.diff(currentDate, 'millisecond'));
-    } else {
-      if (isEnd && currentDay === 5) targetDate = targetDate.subtract(75, 'minute'); // сокращённыйц день пятница
-
-      this.#addLog(`Запланирована отправка ${targetDate.format('DD.MM.YY HH:mm')}`, isEnd);
-      return setTimeout(fn, targetDate.diff(currentDate, 'millisecond'));
+    // пн/вт/ср
+    if (currentDay < 4) {
+      if (isAfterCurrentDate(targetDate)) {
+        targetDate = targetDate.add(1, 'day');
+        return setTtm();
+      } else {
+        return setTtm();
+      }
     }
+
+    // четверг
+    if (currentDay === 4) {
+      if (isAfterCurrentDate(targetDate)) {
+        targetDate = targetDate.add(1, 'day');
+        isEnd && (targetDate = targetDate.subtract(75, 'minute')) // сокращённыйц день пятница
+        return setTtm();
+      } else {
+        return setTtm();
+      }
+    }
+
+    // пятница
+    if (currentDay === 5) {
+      if (isAfterCurrentDate(isEnd ? targetDate.subtract(75, 'minute') : targetDate)) {
+        targetDate = targetDate.add(3, 'day');
+
+        return setTtm();
+      } else {
+        isEnd && (targetDate = targetDate.subtract(75, 'minute'));
+
+        return setTtm();
+      }
+    }
+
   }
 
   async #sendMessage(title, text) {
@@ -271,6 +299,7 @@ class Messager {
     service.Url = new ews.Uri("https://mail.sibintek.ru/EWS/Exchange.asmx");
 
     const emailMessage = new ews.EmailMessage(service);
+
     const messageBody = new ews.MessageBody();
     emailMessage.ToRecipients.Add(this.config.to);
     this.config.copyTo && emailMessage.CcRecipients.Add(this.config.copyTo);
@@ -300,7 +329,7 @@ class Messager {
   #retrySendMessage(configDay, fn, isEnd) {
     if (this.retryConnectVpn < 12) {
       this.retryConnectVpn += 1;
-      return setTimeout(() => fn().then(() => this.retryConnectVpn = 0), 120000);
+      return setTimeout(fn, 2 * 60000);
     } else {
       this.retryConnectVpn = 0;
       return this.#startTimer(configDay, fn, isEnd);
@@ -321,10 +350,12 @@ class Messager {
     if (validConf) {
       this.config = validConf;
       const startDay = () => this.#sendMessage('Начало дня', this.config.start_body)
+        .then(() => this.retryConnectVpn = 0)
         .then(() => this.timers[0] = this.#startTimer(validConf.startDay, startDay))
-        .catch(() => this.timers[0] = this.#retrySendMessage(validConf.endDay, startDay));
+        .catch(() => this.timers[0] = this.#retrySendMessage(validConf.startDay, startDay));
       const endDay = () =>
         this.#sendMessage('Конец дня', this.config.end_body)
+          .then(() => this.retryConnectVpn = 0)
           .then(() => this.timers[1] = this.#startTimer(validConf.endDay, endDay, true))
           .catch(() => this.timers[1] = this.#retrySendMessage(validConf.endDay, endDay, true));
 
@@ -432,4 +463,4 @@ class TabsViewContent {
   }
 }
 
-module.exports = {Messager, WakeUp, TabsViewContent}
+module.exports = {Messager, WakeUp, TabsViewContent, Vpn}
