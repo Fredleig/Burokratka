@@ -174,7 +174,7 @@ class Vpn {
       if (isConnected) return Promise.resolve(true);
 
       const {stdout} = await execAsync(
-        `trac connect -s 185.51.158.182 -u "${config.vpnUser}" -p "${config.vpnPassword}"`,
+        `trac connect -s ИП -u "${config.vpnUser}" -p "${config.vpnPassword}"`,
         {cwd: this.pathVpn, signal: this.stopConnect.signal}
       );
 
